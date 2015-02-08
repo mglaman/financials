@@ -1,0 +1,143 @@
+<?php
+
+use Drupal\financials\FinancialsFieldHelper;
+
+/**
+ * @file
+ * Installation functions for Financials
+ */
+
+function financials_install() {
+  // Create the transaction categories and populate defaults.
+  $vocabulary = taxonomy_vocabulary_machine_name_load('financials_transaction_categories');
+  if (!$vocabulary) {
+    $edit = array(
+      'name' => t('Transaction Categories'),
+      'machine_name' => 'financials_transaction_categories',
+      'description' => t('Categories to better organization transactions.'),
+      'hierarchy' => 1,
+      'module' => 'financials',
+      'weight' => 0,
+    );
+    $vocabulary = (object) $edit;
+    taxonomy_vocabulary_save($vocabulary);
+
+    $default_terms = array(
+      t('Food') => array(
+        t('Groceries'),
+        t('Restaurants')
+      ),
+      t('Bills & Utilities') => array(
+        t('Mortgage & Rent'),
+        t('Property taxes'),
+        t('Phone'),
+        t('Heating & Electric'),
+        t('Water'),
+        t('Insurance')
+      ),
+      t('Credit & Loans') => array(
+        t('Payment'),
+        t('Interest'),
+      ),
+      t('Investments') => array(
+        t('Deposit'),
+        t('Withdraw'),
+        t('Dividend'),
+      ),
+      t('Auto') => array(
+        t('Fuel'),
+        t('Maintenance'),
+        t('Parking'),
+      ),
+      t('Personal') => array(
+        t('Pets supplies'),
+        t('Shopping'),
+        t('Medical'),
+        t('Household supplies'),
+        t('Misc'),
+        t('Gifts & Donations'),
+      )
+    );
+    foreach ($default_terms as $parent_title => $children) {
+      $edit = array(
+        'name' => $parent_title,
+        'description' => '',
+        'parent' => array(0),
+        'vocabulary_machine_name' => 'financials_transaction_categories',
+        'vid' => $vocabulary->vid,
+      );
+      $term = (object) $edit;
+      taxonomy_term_save($term);
+
+      foreach ($children as $key => $child_title) {
+        $edit = array(
+          'name' => $child_title,
+          'description' => '',
+          'parent' => array($term->tid),
+          'vocabulary_machine_name' => 'financials_transaction_categories',
+          'vid' => $vocabulary->vid,
+        );
+        $child_term = (object) $edit;
+        taxonomy_term_save($child_term);
+      }
+    }
+
+    // Setup account nodes
+    variable_set('node_preview_finance_account', false);
+    variable_set('menu_options_finance_account', array());
+    variable_set('node_submitted_finance_account', false);
+    commerce_price_create_instance(
+      ACCOUNT_STARTING_BALANCE_FIELD,
+      'node',
+      'finance_account',
+      t('Initial account balanace'),
+      0,
+      false,
+      array('label' => 'inline')
+    );
+    commerce_price_create_instance(
+      ACCOUNT_CURRENT_BALANCE_FIELD,
+      'node',
+      'finance_account',
+      t('Current account balance'),
+      0,
+      false,
+      array('label' => 'inline')
+    );
+
+    $balance_type = new FinancialsFieldHelper('financials_balance_type', 'node', 'finance_account');
+    if (!$balance_type->fieldExists()) {
+      $settings = array(
+        'allowed_values_function' => 'financials_balance_type_field_values',
+      );
+      $balance_type->createField('list_boolean', 1, $settings);
+    }
+    if (!$balance_type->instanceExists()) {
+      $balance_type->createInstance(t('Account type'), array('display_label' => 1), array());
+    }
+
+  }
+}
+
+function financials_uninstall() {
+  module_load_include('module', 'financials');
+
+  // Delete account node field instances
+  foreach (array(ACCOUNT_STARTING_BALANCE_FIELD, ACCOUNT_CURRENT_BALANCE_FIELD) as $field_name) {
+    $field_helper = new FinancialsFieldHelper($field_name, 'node', 'finance_account');
+    $field_helper->deleteInstance();
+  }
+
+  // Delete fields.
+  foreach (array(TRANSACTION_CATEGORY_FIELD, TRANSACTION_ACCOUNT_REF_FIELD) as $field_name) {
+    $field_helper = new FinancialsFieldHelper($field_name, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
+    $field_helper->deleteField();
+  }
+
+  field_purge_batch(10);
+
+  // Purge the vocabulary.
+  drupal_load('module', 'taxonomy');
+  $vocabulary = taxonomy_vocabulary_machine_name_load('financials_transaction_categories');
+  taxonomy_vocabulary_delete($vocabulary->vid);
+}

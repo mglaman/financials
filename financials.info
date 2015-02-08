@@ -1,0 +1,11 @@
+name = Financials
+descriptions = Turns Commerce into a Budget powerhouse
+core = 7.x
+
+dependencies[] = node
+dependencies[] = taxonomy
+dependencies[] = list
+dependencies[] = commerce
+dependencies[] = commerce_price
+dependencies[] = commerce_line_item
+dependencies[] = xautoload (>= 7.x-4.0)

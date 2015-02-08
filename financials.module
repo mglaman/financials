@@ -1,0 +1,137 @@
+<?php
+
+use Drupal\financials\FinancialsFieldHelper;
+
+/**
+ * @file
+ * Module file for Financials
+ */
+
+define('TRANSACTION_ENTITY', 'commerce_line_item');
+define('TRANSACTION_ENTITY_BUNDLE', 'transaction');
+define('TRANSACTION_CATEGORY_FIELD', 'financials_transaction_category');
+define('TRANSACTION_ACCOUNT_REF_FIELD', 'financials_transaction_account');
+
+define('ACCOUNT_STARTING_BALANCE_FIELD', 'financials_starting_balance');
+define('ACCOUNT_CURRENT_BALANCE_FIELD', 'financials_current_balance');
+define('ACCOUNT_BALANCE_TYPE_FIELD', 'financials_balance_type');
+
+/**
+ * Implements hook_menu().
+ */
+function financials_menu() {
+  $menu = array();
+  $menu['accounts'] = array(
+    'page callback' => '\Drupal\\financials\\FinancialsPageRouter::loadPage',
+    'page arguments' => array(
+      '\Drupal\\financials\\Pages\\AccountsOverview',
+      'allAccounts',
+    ),
+    'access arguments' => array('access content'),
+    'menu_name' => 'navigation',
+  );
+  return $menu;
+}
+
+/**
+ * Implements hook_node_info().
+ */
+function financials_node_info() {
+  return array(
+    'finance_account' => array(
+      'name' => t('Finance account'),
+      'base' => 'finance_account',
+      'description' => t('Create financial accounts that maintain a balance and have transactions.'),
+      'title_label' => t('Account name'),
+      'help' => t('Accounts can be credit cards, savings accounts, or even items that are assets (such as property.)')
+    )
+  );
+}
+
+/**
+ * Implements hook_form().
+ */
+function finance_account_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function financials_form_finance_account_node_form_alter(&$form, &$form_state) {
+  $form['options']['#access'] = false;
+}
+
+/**
+ * Implements hook_commerce_line_item_type_info().
+ */
+function financials_commerce_line_item_type_info() {
+  $line_item_types = array();
+
+  $line_item_types[TRANSACTION_ENTITY_BUNDLE] = array(
+    'type' => TRANSACTION_ENTITY_BUNDLE,
+    'name' => t('Transaction'),
+    'description' => t('Transactions performed against accounts.'),
+    'product' => false,
+    'add_form_submit_value' => t('Add Transaction'),
+    'base' => 'financials_transaction_line_item',
+  );
+  return $line_item_types;
+}
+
+function financials_transaction_line_item_configuration($line_item_type) {
+  field_cache_clear();
+  // Transaction term references
+  $category_reference = new FinancialsFieldHelper(TRANSACTION_CATEGORY_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
+  if (!$category_reference->fieldExists()) {
+    $field_settings = array(
+      'allowed_values' => array(
+        array(
+          'vocabulary' => 'financials_transaction_categories',
+          'parent' => 0,
+        ),
+      ),
+    );
+    $category_reference->createField('taxonomy_term_reference', 1, $field_settings);
+  }
+
+  if (!$category_reference->instanceExists()) {
+    $widget = array(
+      'type' => 'options_select',
+    );
+    $display = array(
+      'label' => 'hidden',
+      'weight' => 0,
+      'type' => 'taxonomy_term_reference_plain'
+    );
+    $category_reference->createInstance(t('Transaction Category'), $widget, $display);
+  }
+
+  // Transaction account node reference
+  $account_reference = new FinancialsFieldHelper(TRANSACTION_ACCOUNT_REF_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
+  if (!$account_reference->fieldExists()) {
+    $settings = array(
+      'handler_settings' => array(
+        'target_bundles' => array(
+          'finance_account' => 'finance_account',
+        ),
+      ),
+    );
+    $account_reference->createField('entityreference', 1, $settings);
+  }
+
+  if (!$account_reference->instanceExists()) {
+    $widget = array(
+      'type' => 'options_select',
+      'weight' => 0,
+    );
+    $account_reference->createInstance(t('Account'), $widget, array());
+  }
+}
+
+function financials_balance_type_field_values() {
+  return array(
+    t('Debt'),
+    t('Asset'),
+  );
+}
