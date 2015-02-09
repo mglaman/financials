@@ -57,14 +57,13 @@ class AccountsOverview {
       $account = new AccountNode(AccountNode::loadEntity($nid));
 
       $startingBalance = $account->getStartingBalance();
-      $startingBalanceValue = FinancialsUtils::priceFieldAmount($startingBalance);
-      $this->netStarting += $startingBalanceValue;
+      $this->netStarting += $startingBalance;
 
       $currentBalance = $account->getCurrentBalance();
-      $currentBalanceValue = FinancialsUtils::priceFieldAmount($currentBalance);
-      $this->netCurrent += $currentBalanceValue;
+      //$currentBalanceValue = FinancialsUtils::priceFieldAmount($currentBalance);
+      $this->netCurrent += $currentBalance;
 
-      $balanceDiff = FinancialsUtils::priceFieldDiff($startingBalance, $currentBalance);
+      $balanceDiff = ($startingBalance - $currentBalance) * -1;
       $this->netDiff += $balanceDiff;
 
       $accountType = $account->getAccountType();
@@ -73,8 +72,8 @@ class AccountsOverview {
       $rows[] = array(
         'data' => array(
           l($account->label(), $account->getPath()),
-          FinancialsUtils::currencyFormat($startingBalanceValue),
-          FinancialsUtils::currencyFormat($currentBalanceValue),
+          FinancialsUtils::currencyFormat($startingBalance),
+          FinancialsUtils::currencyFormat($currentBalance),
           FinancialsUtils::currencyFormat($balanceDiff),
         ),
         'class' => array(

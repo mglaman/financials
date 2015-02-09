@@ -2,6 +2,8 @@
 
 namespace Drupal\financials;
 
+use Drupal\financials\Entity\AccountNode;
+
 class FinancialsUtils {
 
   public static function currencyFormat($priceAmount) {
@@ -17,11 +19,9 @@ class FinancialsUtils {
   }
 
   public static function diffGoodOrBad($accountType, $diff) {
-    if ($accountType) {
+    if ($accountType == AccountNode::DEBT_ACCOUNT) {
       return ($diff > 0);
     }
-    else {
-      return ($diff < 0);
-    }
+    return ($diff > 0);
   }
 }

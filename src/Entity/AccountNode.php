@@ -15,20 +15,31 @@ class AccountNode extends FinancialsEntityBase implements FinancialsEntityHelper
     return 'node/' . $this->wrapper->getIdentifier();
   }
 
-  /**
-   * @return \EntityStructureWrapper
-   * @throws \EntityMetadataWrapperException
-   */
-  public function getStartingBalance() {
-    return $this->wrapper->get(ACCOUNT_STARTING_BALANCE_FIELD);
+  protected function getFieldBalance($fieldName) {
+    /** @var \EntityStructureWrapper $fieldWrapper */
+    $fieldWrapper = $this->wrapper->get($fieldName);
+    $balance = FinancialsUtils::priceFieldAmount($fieldWrapper);
+
+    if ($this->getAccountType() == self::DEBT_ACCOUNT) {
+      $balance = $balance * -1;
+    }
+    return $balance;
   }
 
   /**
-   * @return \EntityStructureWrapper
+   * @return mixed
+   * @throws \EntityMetadataWrapperException
+   */
+  public function getStartingBalance() {
+    return $this->getFieldBalance(ACCOUNT_STARTING_BALANCE_FIELD);
+  }
+
+  /**
+   * @return mixed
    * @throws \EntityMetadataWrapperException
    */
   public function getCurrentBalance() {
-    return $this->wrapper->get(ACCOUNT_CURRENT_BALANCE_FIELD);
+    return $this->getFieldBalance(ACCOUNT_CURRENT_BALANCE_FIELD);
   }
 
   public function setCurrentBalance($amount) {
