@@ -2,6 +2,7 @@
 
 use Drupal\financials\FinancialsFieldHelper;
 use Drupal\financials\Entity\TransactionLineItem;
+use Drupal\financials\Displays\AccountTransactions;
 
 /**
  * @file
@@ -170,4 +171,32 @@ function financials_balance_type_field_values() {
     t('Debt'),
     t('Asset'),
   );
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function financials_field_extra_fields() {
+  return array(
+    'node' => array(
+      'finance_account' => array(
+        'display' => array(
+          'financials_account_transactions' => array(
+            'label' => t('Account transactions'),
+            'description' => t('Transactions listed under the account'),
+            'weight' => 10,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_view().
+ */
+function finance_account_view($node, $view_mode) {
+  $output = new AccountTransactions($node->nid);
+  $node->content['financials_account_transactions'] = $output->transactionTable();
+  return $node;
 }
