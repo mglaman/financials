@@ -72,7 +72,7 @@ class AccountsOverview {
 
       $rows[] = array(
         'data' => array(
-          $account->label(),
+          l($account->label(), $account->getPath()),
           FinancialsUtils::currencyFormat($startingBalanceValue),
           FinancialsUtils::currencyFormat($currentBalanceValue),
           FinancialsUtils::currencyFormat($balanceDiff),

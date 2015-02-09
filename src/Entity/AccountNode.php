@@ -11,6 +11,10 @@ class AccountNode extends FinancialsEntityBase implements FinancialsEntityHelper
 
   protected $entityType = 'node';
 
+  public function getPath() {
+    return 'node/' . $this->wrapper->getIdentifier();
+  }
+
   /**
    * @return \EntityStructureWrapper
    * @throws \EntityMetadataWrapperException
