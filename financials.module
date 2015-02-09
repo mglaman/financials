@@ -162,29 +162,3 @@ function financials_balance_type_field_values() {
     t('Asset'),
   );
 }
-
-/**
- * Implements hook_block_info().
- */
-function financials_block_info() {
-  $blocks = array();
-  $blocks['financials_add_transaction_form'] = array(
-    'info' => t('Add transaction form'),
-  );
-  return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function financials_block_view($delta = '') {
-  switch ($delta) {
-    case 'financials_add_transaction_form':
-      module_load_include('inc', 'financials', 'financials.pages');
-      return array(
-        'subject' => t('Add transaction'),
-        'content' => drupal_get_form('financials_add_transaction_form', TransactionLineItem::newStub()),
-      );
-      break;
-  }
-}
