@@ -1,8 +1,9 @@
 <?php
 
-namespace Drupal\financials\Pages;
+namespace Drupal\financials\Displays;
 
 use Drupal\financials\FinancialsUtils;
+use Drupal\financials\Entity\AccountNode;
 
 /**
  * Class AccountsOverview
@@ -53,21 +54,20 @@ class AccountsOverview {
   protected function tableRows() {
     $rows = array();
     foreach ($this->queryNodes() as $nid) {
-      $account = new \EntityDrupalWrapper('node', $nid);
+      $account = new AccountNode(AccountNode::loadEntity($nid));
 
-      /** @var \EntityStructureWrapper $startingBalance */
-      $startingBalance = $account->get(ACCOUNT_STARTING_BALANCE_FIELD);
+      $startingBalance = $account->getStartingBalance();
       $startingBalanceValue = FinancialsUtils::priceFieldAmount($startingBalance);
       $this->netStarting += $startingBalanceValue;
-      /** @var \EntityStructureWrapper $currentBalance */
-      $currentBalance = $account->get(ACCOUNT_CURRENT_BALANCE_FIELD);
+
+      $currentBalance = $account->getCurrentBalance();
       $currentBalanceValue = FinancialsUtils::priceFieldAmount($currentBalance);
       $this->netCurrent += $currentBalanceValue;
 
       $balanceDiff = FinancialsUtils::priceFieldDiff($startingBalance, $currentBalance);
       $this->netDiff += $balanceDiff;
 
-      $accountType = $account->get(ACCOUNT_BALANCE_TYPE_FIELD)->value();
+      $accountType = $account->getAccountType();
       $diffStanding = FinancialsUtils::diffGoodOrBad($accountType, $balanceDiff);
 
       $rows[] = array(
