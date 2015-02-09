@@ -63,7 +63,7 @@ class TransactionForm {
     $handler->save();
 
     drupal_set_message(
-      t('Transaction "@label" has been recorded', array('@label' => $lineItem->line_item_label))
+      t('Transfer has been recorded')
     );
   }
 }

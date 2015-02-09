@@ -38,6 +38,22 @@ class TransactionLineItem extends FinancialsEntityBase implements FinancialsEnti
     return $this->wrapper->get('commerce_unit_price');
   }
 
+  public function setLabel($label = null) {
+    if (!$label) {
+      $this->wrapper->get('line_item_label')->set($this->defaultLabel());
+    }
+    else {
+      $this->wrapper->get('line_item_label')->set($label);
+    }
+  }
+
+  public function defaultLabel() {
+    return t('Transaction on @account for @amount', array(
+      '@account' => $this->wrapper->get(TRANSACTION_ACCOUNT_REF_FIELD)->label(),
+      '@amount' => FinancialsUtils::currencyFormat(FinancialsUtils::priceFieldAmount($this->getTotal())),
+    ));
+  }
+
   /**
    * Returns line item entity stub.
    * @return \stdClass

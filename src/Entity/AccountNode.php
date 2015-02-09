@@ -50,9 +50,11 @@ class AccountNode extends FinancialsEntityBase implements FinancialsEntityHelper
   public function adjustCurrentBalance($amount) {
     if ($this->getAccountType() == self::DEBT_ACCOUNT) {
       $amount = $amount * -1;
+      $newAccountBalance = ($this->getCurrentBalance() + $amount) * -1;
     }
-    $accountBalance = FinancialsUtils::priceFieldAmount($this->getCurrentBalance());
-    $newAccountBalance = $accountBalance + $amount;
+    else {
+      $newAccountBalance = ($this->getCurrentBalance() + $amount);
+    }
     $this->setCurrentBalance($newAccountBalance);
   }
 

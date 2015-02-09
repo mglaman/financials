@@ -23,7 +23,7 @@ $plugin = array(
  * @param $context
  * @return \stdClass
  */
-function financials_ctools_add_transaction_form_content_type_render($subtype, $conf, $panel_args, &$context) {
+function financials_ctools_accounts_overview_content_type_render($subtype, $conf, $panel_args, &$context) {
   $overview = new AccountsOverview();
   $block = (object) array(
     'subject' => t('Accounts'),
@@ -33,11 +33,11 @@ function financials_ctools_add_transaction_form_content_type_render($subtype, $c
   return $block;
 }
 
-function financials_ctools_add_transaction_form_content_type_admin_title($subtype, $conf, $context) {
+function financials_ctools_accounts_overview_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" base form', array('@s' => $context->identifier));
 }
 
-function financials_ctools_add_transaction_form_content_type_edit_form($form, &$form_state) {
+function financials_ctools_accounts_overview_content_type_edit_form($form, &$form_state) {
   // provide a blank form so we have a place to override title
   // and stuff.
   return $form;
