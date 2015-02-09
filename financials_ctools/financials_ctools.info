@@ -1,0 +1,5 @@
+name = Financials (Chaos Tools)
+description = Adds integration to Chaos Tools with Financials module (Panels, etc.)
+core = 7.x
+
+dependencies[] = financials
