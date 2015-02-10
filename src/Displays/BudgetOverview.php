@@ -43,9 +43,10 @@ class BudgetOverview {
 
   protected function tableHeaders() {
     return array(
-      t('Budget Item'),
       t('Account'),
+      t('Category'),
       t('Amount'),
+      t('Description'),
     );
   }
 
@@ -67,8 +68,9 @@ class BudgetOverview {
       $rows[] = array(
         'data' => array(
           l($budgetAccount->label(), $budgetAccount->getPath()),
-          $budgetItem->label(),
+          $budgetItem->getCategory()->label(),
           FinancialsUtils::currencyFormat($budgetAmount),
+          $budgetItem->label(),
         ),
         'class' => array(
           'financials-overview-budget-row',
@@ -88,7 +90,8 @@ class BudgetOverview {
         'data' => array(
           '',
           '',
-          t('Balance: @balance', array('@balance' => FinancialsUtils::currencyFormat($this->netDiff))),
+          t('Net: @balance', array('@balance' => FinancialsUtils::currencyFormat($this->netDiff))),
+          '',
         ),
         'class' => array(
           'info'

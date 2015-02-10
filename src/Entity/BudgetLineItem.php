@@ -66,6 +66,14 @@ class BudgetLineItem extends FinancialsEntityBase implements FinancialsEntityHel
   }
 
   /**
+   * @return \EntityDrupalWrapper
+   * @throws \EntityMetadataWrapperException
+   */
+  public function getCategory() {
+    return $this->wrapper->get(BUDGET_CATEGORY_FIELD);
+  }
+
+  /**
    * Returns line item entity stub.
    * @return \stdClass
    */
