@@ -36,6 +36,7 @@ define('ACCOUNT_BALANCE_TYPE_FIELD', 'financials_balance_type');
 function financials_menu() {
   $menu = array();
   $menu['accounts'] = array(
+    'title' => 'Accounts',
     'page callback' => '\Drupal\\financials\\FinancialsPageRouter::loadPage',
     'page arguments' => array(
       '\Drupal\\financials\\Displays\\AccountsOverview',
@@ -45,6 +46,7 @@ function financials_menu() {
     'menu_name' => 'navigation',
   );
   $menu['budget'] = array(
+    'title' => 'Budget',
     'page callback' => '\Drupal\\financials\\FinancialsPageRouter::loadPage',
     'page arguments' => array(
       '\Drupal\\financials\\Displays\\BudgetOverview',
@@ -54,6 +56,7 @@ function financials_menu() {
     'menu_name' => 'navigation',
   );
   $menu['add/transaction'] = array(
+    'title' => 'Add transaction',
     'page callback' => 'drupal_get_form',
     'page arguments' => array(
       'financials_add_transaction_form',
@@ -64,6 +67,7 @@ function financials_menu() {
     'file' => 'financials.pages.inc',
   );
   $menu['add/budget-item'] = array(
+    'title' => 'Add budget item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array(
       'financials_add_budget_form',
@@ -74,6 +78,7 @@ function financials_menu() {
     'file' => 'financials.pages.inc',
   );
   $menu['add/transfer'] = array(
+    'title' => 'Create a transfer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array(
       'financials_transfer_transaction_form',
