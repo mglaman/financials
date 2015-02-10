@@ -76,7 +76,7 @@ class BudgetOverview {
         )
       );
     }
-    $this->netDiff = ($this->netIncome - $this->netExpense);
+    $this->netDiff = ($this->netIncome + $this->netExpense);
     $rows = $this->appendStats($rows);
 
     return $rows;
