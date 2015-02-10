@@ -1,6 +1,6 @@
 <?php
 
-use Drupal\financials\FinancialsFieldHelper;
+use Drupal\financials\Helpers\FinancialsFieldHelper;
 
 /**
  * @file

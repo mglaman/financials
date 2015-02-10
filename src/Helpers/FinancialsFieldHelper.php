@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\financials;
+namespace Drupal\financials\Helpers;
 
 /**
  * Class FinancialsFieldHelper
@@ -45,13 +45,13 @@ class FinancialsFieldHelper {
     field_create_field($field);
   }
 
-  public function createInstance($label, $widget, $display) {
+  public function createInstance($label, $widget, $display, $required = true) {
     $instance = array(
       'field_name' => $this->fieldName,
       'entity_type' => $this->entityType,
       'bundle' => $this->entityBundle,
       'label' => $label,
-      'required' => TRUE,
+      'required' => $required,
       'settings' => array(),
       'widget' => $widget,
       'display' => array(

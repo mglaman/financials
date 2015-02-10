@@ -1,7 +1,13 @@
 <?php
 
-use Drupal\financials\FinancialsFieldHelper;
+// Field helpers
+use Drupal\financials\Helpers\FinancialsFieldHelper;
+use Drupal\financials\Helpers\LineItemCategoryFieldHelper;
+use Drupal\financials\Helpers\LineItemAccountFieldHelper;
+
+// Misc
 use Drupal\financials\Entity\TransactionLineItem;
+use Drupal\financials\Entity\BudgetLineItem;
 use Drupal\financials\Displays\AccountTransactions;
 
 /**
@@ -13,6 +19,12 @@ define('TRANSACTION_ENTITY', 'commerce_line_item');
 define('TRANSACTION_ENTITY_BUNDLE', 'transaction');
 define('TRANSACTION_CATEGORY_FIELD', 'financials_transaction_category');
 define('TRANSACTION_ACCOUNT_REF_FIELD', 'financials_transaction_account');
+
+define('BUDGET_ENTITY', 'commerce_line_item');
+define('BUDGET_ENTITY_BUNDLE', 'budget');
+define('BUDGET_CATEGORY_FIELD', 'financials_transaction_category');
+define('BUDGET_ACCOUNT_REF_FIELD', 'financials_transaction_account');
+define('BUDGET_TYPE_FIELD', 'financials_budget_type');
 
 define('ACCOUNT_STARTING_BALANCE_FIELD', 'financials_starting_balance');
 define('ACCOUNT_CURRENT_BALANCE_FIELD', 'financials_current_balance');
@@ -32,11 +44,30 @@ function financials_menu() {
     'access arguments' => array('access content'),
     'menu_name' => 'navigation',
   );
+  $menu['budget'] = array(
+    'page callback' => '\Drupal\\financials\\FinancialsPageRouter::loadPage',
+    'page arguments' => array(
+      '\Drupal\\financials\\Displays\\BudgetOverview',
+      'allBudgetItems',
+    ),
+    'access arguments' => array('access content'),
+    'menu_name' => 'navigation',
+  );
   $menu['add/transaction'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array(
       'financials_add_transaction_form',
       TransactionLineItem::newStub(),
+    ),
+    'access arguments' => array('administer content'),
+    'menu_name' => 'navigation',
+    'file' => 'financials.pages.inc',
+  );
+  $menu['add/budget-item'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'financials_add_budget_form',
+      BudgetLineItem::newStub(),
     ),
     'access arguments' => array('administer content'),
     'menu_name' => 'navigation',
@@ -113,56 +144,51 @@ function financials_commerce_line_item_type_info() {
     'add_form_submit_value' => t('Add Transaction'),
     'base' => 'financials_transaction_line_item',
   );
+  $line_item_types[BUDGET_ENTITY_BUNDLE] = array(
+    'type' => BUDGET_ENTITY_BUNDLE,
+    'name' => t('Budget Item'),
+    'description' => t('Expected expenses throughout a month to define a budget.'),
+    'product' => false,
+    'add_form_submit_value' => t('Add budget item'),
+    'base' => 'financials_budget_line_item',
+  );
   return $line_item_types;
 }
 
 function financials_transaction_line_item_configuration($line_item_type) {
   field_cache_clear();
   // Transaction term references
-  $category_reference = new FinancialsFieldHelper(TRANSACTION_CATEGORY_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
-  if (!$category_reference->fieldExists()) {
-    $field_settings = array(
-      'allowed_values' => array(
-        array(
-          'vocabulary' => 'financials_transaction_categories',
-          'parent' => 0,
-        ),
-      ),
-    );
-    $category_reference->createField('taxonomy_term_reference', 1, $field_settings);
-  }
-
-  if (!$category_reference->instanceExists()) {
-    $widget = array(
-      'type' => 'options_select',
-    );
-    $display = array(
-      'label' => 'hidden',
-      'weight' => 0,
-      'type' => 'taxonomy_term_reference_plain'
-    );
-    $category_reference->createInstance(t('Transaction Category'), $widget, $display);
-  }
+  $category_reference = new LineItemCategoryFieldHelper(TRANSACTION_CATEGORY_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
+  $category_reference->createField();
+  $category_reference->createInstance(t('Transaction Category'));
 
   // Transaction account node reference
-  $account_reference = new FinancialsFieldHelper(TRANSACTION_ACCOUNT_REF_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
-  if (!$account_reference->fieldExists()) {
-    $settings = array(
-      'handler_settings' => array(
-        'target_bundles' => array(
-          'finance_account' => 'finance_account',
-        ),
-      ),
-    );
-    $account_reference->createField('entityreference', 1, $settings);
-  }
+  $account_reference = new LineItemAccountFieldHelper(TRANSACTION_ACCOUNT_REF_FIELD, TRANSACTION_ENTITY, TRANSACTION_ENTITY_BUNDLE);
+  $account_reference->createField();
+  $account_reference->createInstance(t('Account'));
+}
 
-  if (!$account_reference->instanceExists()) {
-    $widget = array(
-      'type' => 'options_select',
-      'weight' => 0,
+function financials_budget_line_item_configuration($line_item_type) {
+  field_cache_clear();
+  // Transaction term references
+  $category_reference = new LineItemCategoryFieldHelper(BUDGET_CATEGORY_FIELD, BUDGET_ENTITY, BUDGET_ENTITY_BUNDLE);
+  $category_reference->createField();
+  $category_reference->createInstance(t('Budget Item Category'));
+
+  // Transaction account node reference
+  $account_reference = new LineItemAccountFieldHelper(BUDGET_ACCOUNT_REF_FIELD, BUDGET_ENTITY, BUDGET_ENTITY_BUNDLE);
+  $account_reference->createField();
+  $account_reference->createInstance(t('Account'));
+
+  $budget_type = new FinancialsFieldHelper(BUDGET_TYPE_FIELD, BUDGET_ENTITY, BUDGET_ENTITY_BUNDLE);
+  if (!$budget_type->fieldExists()) {
+    $settings = array(
+      'allowed_values_function' => 'financials_budget_type_field_values',
     );
-    $account_reference->createInstance(t('Account'), $widget, array());
+    $budget_type->createField('list_boolean', 1, $settings);
+  }
+  if (!$budget_type->instanceExists()) {
+    $budget_type->createInstance(t('Transaction type'), array('display_label' => 1), array());
   }
 }
 
@@ -170,6 +196,13 @@ function financials_balance_type_field_values() {
   return array(
     t('Debt'),
     t('Asset'),
+  );
+}
+
+function financials_budget_type_field_values() {
+  return array(
+    t('Expense'),
+    t('Income'),
   );
 }
 
