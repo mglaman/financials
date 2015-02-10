@@ -2,6 +2,7 @@ name = Financials
 descriptions = Turns Commerce into a Budget powerhouse
 core = 7.x
 
+dependencies[] = entityreference
 dependencies[] = node
 dependencies[] = taxonomy
 dependencies[] = list
