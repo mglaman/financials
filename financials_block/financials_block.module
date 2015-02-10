@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\financials\Entity\TransactionLineItem;
+use Drupal\financials\Entity\BudgetLineItem;
 
 /**
  * Implements hook_block_info().
@@ -12,6 +13,9 @@ function financials_block_block_info() {
   );
   $blocks['financials_transfer_form'] = array(
     'info' => t('Transfer form'),
+  );
+  $blocks['financials_add_budget_form'] = array(
+    'info' => t('Add budget item form'),
   );
   return $blocks;
 }
@@ -33,6 +37,13 @@ function financials_block_block_view($delta = '') {
       return array(
         'subject' => t('Account transfer'),
         'content' => drupal_get_form('financials_transfer_transaction_form'),
+      );
+      break;
+    case 'financials_add_budget_form':
+      module_load_include('inc', 'financials', 'financials.pages');
+      return array(
+        'subject' => t('Add budget item'),
+        'content' => drupal_get_form('financials_add_budget_form', BudgetLineItem::newStub()),
       );
       break;
   }
