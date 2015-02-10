@@ -9,3 +9,82 @@ function financials_ctools_ctools_plugin_directory($owner, $plugin_type) {
   }
   return null;
 }
+
+/**
+ * Implements hook_menu().
+ */
+function financials_ctools_menu() {
+  $items['add/account/%ctools_js/add'] = array(
+    'title' => 'Add account',
+    'page callback' => 'financials_ctools_add_account_modal_form',
+    'page arguments' => array(3),
+    'access arguments' => array('administer nodes'),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function financials_ctools_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if ($root_path == 'accounts') {
+    ctools_include('modal');
+    ctools_modal_add_js();
+
+    // Reset local tasks for ctools modal friendly links.
+    $data['actions']['output'] = array();
+
+    $item = menu_get_item('add/account/nojs/add');
+    if ($item['access']) {
+      $item['title'] = t('Add account');
+      $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
+}
+
+function financials_ctools_add_account_modal_form($js = false) {
+  global $user;
+  $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => 'finance_account', 'language' => LANGUAGE_NONE);
+  financials_ctools_edit_account_modal_form($js, $node);
+}
+
+/**
+ * Node edit modal for accounts.
+ *
+ * @param bool $js
+ * @param $node
+ *
+ * @return array|mixed
+ */
+function financials_ctools_edit_account_modal_form($js = false, $node) {
+  // Fall back if $js is not set.
+  if (!$js) {
+    return drupal_get_form('finance_account_node_form', array($node));
+  }
+
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+
+  $op = (isset($node->title)) ? t('Edit') : t('New');
+  $form_state = array(
+    'title' => t('@op account', array('@op' => $op)),
+    'ajax' => TRUE,
+  );
+  $form_state['build_info']['args'] = array($node);
+  // change this to your type node form
+  $output = ctools_modal_form_wrapper('finance_account_node_form', $form_state);
+
+  if (!empty($form_state['executed'])) {
+    $output = array();
+    $output[] = ctools_modal_command_dismiss();
+    $output[] = ctools_ajax_command_reload();
+  }
+
+  print ajax_render($output);
+  exit;
+}
