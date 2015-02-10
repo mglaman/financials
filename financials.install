@@ -23,7 +23,6 @@ function financials_install() {
     taxonomy_vocabulary_save($vocabulary);
 
     $default_terms = array(
-      t('Income'),
       t('Food') => array(
         t('Groceries'),
         t('Restaurants')
@@ -38,20 +37,20 @@ function financials_install() {
         t('Insurance')
       ),
       t('Credit & Loans') => array(
-        t('Payment'),
-        t('Interest'),
+        t('Credit & Loans - Payment'),
+        t('Credit & Loans - Interest'),
       ),
       t('Investments') => array(
-        t('Deposit'),
-        t('Withdraw'),
-        t('Dividend'),
+        t('Investment Deposit'),
+        t('Investment Withdraw'),
+        t('Investments Dividend'),
       ),
       t('Auto') => array(
         t('Fuel'),
-        t('Maintenance'),
-        t('Parking'),
+        t('Auto Maintenance'),
       ),
       t('Personal') => array(
+        t('Income'),
         t('Pets supplies'),
         t('Shopping'),
         t('Medical'),
