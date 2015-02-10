@@ -23,6 +23,7 @@ function financials_install() {
     taxonomy_vocabulary_save($vocabulary);
 
     $default_terms = array(
+      t('Income'),
       t('Food') => array(
         t('Groceries'),
         t('Restaurants')
