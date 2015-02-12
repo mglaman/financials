@@ -30,7 +30,9 @@ class BudgetOverview {
   protected function queryLineItems() {
     $query = new \EntityFieldQuery();
     $query->entityCondition('entity_type', 'commerce_line_item')
-      ->propertyCondition('type', BUDGET_ENTITY_BUNDLE);
+      ->propertyCondition('type', BUDGET_ENTITY_BUNDLE)
+      ->fieldCondition(BUDGET_ACCOUNT_REF_FIELD, 'target_id', '', '<>');
+    $query->addTag('financials_line_item_access');
     $result = $query->execute();
 
     if (isset($result['commerce_line_item'])) {

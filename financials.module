@@ -264,3 +264,67 @@ function finance_account_view($node, $view_mode) {
   $node->content['financials_account_transactions'] = $output->transactionTable();
   return $node;
 }
+
+/**
+ * Implements hook_query_TAG_alter().
+ *
+ * Implement access control on line items. This is different from other entities
+ * because the access to a line item is totally delegated to its order.
+ *
+ * @param SelectQuery $query
+ */
+function financials_query_financials_line_item_access_alter(SelectQuery $query) {
+  /** @var EntityFieldQuery $meta */
+  $meta = $query->getMetaData('entity_field_query');
+  // Read the meta-data from the query.
+  if (!$account = $query->getMetaData('account')) {
+    /** @var \stdClass $user */
+    global $user;
+    $account = $user;
+  }
+
+  // Base table
+  $tables = &$query->getTables();
+  reset($tables);
+  $base_table = key($tables);
+
+  // Field column (ugly way to get field, but works.
+  $field_name = $meta->fields[0]['field_name'];
+  $query->innerJoin('node', 'n', '%alias.nid = ' . $base_table . '.'. $field_name . '_target_id');
+  $query->condition('n.uid', $account->uid);
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ *
+ * @param SelectQuery $query
+ */
+function financials_query_entityreference_alter(SelectQuery $query) {
+  // Read the meta-data from the query.
+  if (!$account = $query->getMetaData('account')) {
+    /** @var \stdClass $user */
+    global $user;
+    $account = $user;
+  }
+  /** @var EntityFieldQuery $meta */
+  $queryMeta = $query->getMetaData('entity_field_query');
+  $fieldMeta = $query->getMetaData('field');
+  $query->condition('node.uid', $account->uid);
+
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function financials_node_access($node, $op, $account) {
+  if (is_string($node)) {
+    return NODE_ACCESS_IGNORE;
+  }
+  if (user_access('administer nodes')) {
+    return NODE_ACCESS_ALLOW;
+  }
+  if ($node->uid == $account->uid) {
+    return NODE_ACCESS_ALLOW;
+  }
+  return NODE_ACCESS_DENY;
+}
