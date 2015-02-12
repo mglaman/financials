@@ -62,7 +62,7 @@ function financials_menu() {
       'financials_add_transaction_form',
       TransactionLineItem::newStub(),
     ),
-    'access arguments' => array('administer content'),
+    'access arguments' => array('financials add line item'),
     'menu_name' => 'navigation',
     'file' => 'financials.pages.inc',
   );
@@ -73,7 +73,7 @@ function financials_menu() {
       'financials_add_budget_form',
       BudgetLineItem::newStub(),
     ),
-    'access arguments' => array('administer content'),
+    'access arguments' => array('financials add line item'),
     'menu_name' => 'navigation',
     'file' => 'financials.pages.inc',
   );
@@ -83,7 +83,7 @@ function financials_menu() {
     'page arguments' => array(
       'financials_transfer_transaction_form',
     ),
-    'access arguments' => array('administer content'),
+    'access arguments' => array('financials add line item'),
     'menu_name' => 'navigation',
     'file' => 'financials.pages.inc',
   );
@@ -104,6 +104,18 @@ function financials_menu_local_tasks_alter(&$data, $router_item, $root_path) {
       );
     }
   }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function financials_permission() {
+  return array(
+    'financials add line item' =>  array(
+      'title' => t('Add transaction or budget line items'),
+      'description' => t('Allows user to add account transactions or budget items.'),
+    ),
+  );
 }
 
 /**
