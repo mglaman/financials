@@ -1,5 +1,17 @@
 <?php
 
+// Account modal forms
+use Drupal\financials_ctools\ModalForms\AccountAdd;
+use Drupal\financials_ctools\ModalForms\AccountEdit;
+
+// Transaction modal forms
+use Drupal\financials_ctools\ModalForms\TransactionAdd;
+use Drupal\financials_ctools\ModalForms\TransactionEdit;
+
+// Transfers
+use Drupal\financials_ctools\ModalForms\TransferAdd;
+use Drupal\financials_ctools\ModalForms\TransferEdit;
+
 /**
  * Implements hook_ctools_plugin_directory().
  */
@@ -14,11 +26,35 @@ function financials_ctools_ctools_plugin_directory($owner, $plugin_type) {
  * Implements hook_menu().
  */
 function financials_ctools_menu() {
-  $items['add/account/%ctools_js/add'] = array(
+  $items['accounts/%ctools_js/add'] = array(
     'title' => 'Add account',
-    'page callback' => 'financials_ctools_add_account_modal_form',
-    'page arguments' => array(3),
-    'access arguments' => array('administer nodes'),
+    'page callback' => 'financials_ctools_account_modal_form',
+    'page arguments' => array(2, null),
+    'access arguments' => array('create finance_account content'),
+  );
+  $items['accounts/%ctools_js/edit/%node'] = array(
+    'title' => 'Add account',
+    'page callback' => 'financials_ctools_account_modal_form',
+    'page arguments' => array(2, 4),
+    'access arguments' => array('edit own finance_account content'),
+  );
+  $items['transactions/%ctools_js/add'] = array(
+    'title' => 'Add transaction',
+    'page callback' => 'financials_ctools_transaction_modal_form',
+    'page arguments' => array(2, null),
+    'access arguments' => array('financials add line item'),
+  );
+  $items['transfers/%ctools_js/add'] = array(
+    'title' => 'Add transfer',
+    'page callback' => 'financials_ctools_transfer_modal_form',
+    'page arguments' => array(2, null),
+    'access arguments' => array('financials add line item'),
+  );
+  $items['budget/%ctools_js/add'] = array(
+    'title' => 'Add budget item',
+    'page callback' => 'financials_ctools_budget_modal_form',
+    'page arguments' => array(2, null),
+    'access arguments' => array('financials add line item'),
   );
   return $items;
 }
@@ -34,9 +70,47 @@ function financials_ctools_menu_local_tasks_alter(&$data, $router_item, $root_pa
     // Reset local tasks for ctools modal friendly links.
     $data['actions']['output'] = array();
 
-    $item = menu_get_item('add/account/nojs/add');
+    $item = menu_get_item('accounts/nojs/add');
     if ($item['access']) {
       $item['title'] = t('Add account');
+      $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+    $item = menu_get_item('transactions/nojs/add');
+    if ($item['access']) {
+      $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+    $item = menu_get_item('transfers/nojs/add');
+    if ($item['access']) {
+      $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
+  if ($root_path == 'budget') {
+    ctools_include('modal');
+    ctools_modal_add_js();
+
+    $item = menu_get_item('accounts/nojs/add');
+    if ($item['access']) {
+      $item['title'] = t('Add account');
+      $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+    $item = menu_get_item('budget/nojs/add');
+    if ($item['access']) {
       $item['localized_options']['attributes']['class'][] = 'ctools-use-modal';
       $data['actions']['output'][] = array(
         '#theme' => 'menu_local_action',
@@ -46,45 +120,67 @@ function financials_ctools_menu_local_tasks_alter(&$data, $router_item, $root_pa
   }
 }
 
-function financials_ctools_add_account_modal_form($js = false) {
-  global $user;
-  $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => 'finance_account', 'language' => LANGUAGE_NONE);
-  financials_ctools_edit_account_modal_form($js, $node);
-}
-
 /**
- * Node edit modal for accounts.
+ * Node add modal for accounts.
  *
  * @param bool $js
- * @param $node
+ * @param \stdClass $node
  *
  * @return array|mixed
  */
-function financials_ctools_edit_account_modal_form($js = false, $node) {
-  // Fall back if $js is not set.
-  if (!$js) {
-    return drupal_get_form('finance_account_node_form', array($node));
+function financials_ctools_account_modal_form($js = false, $node = null) {
+  if ($node == NULL) {
+    $modalHandler = new AccountAdd('finance_account_node_form',
+      array(\Drupal\financials\Entity\AccountNode::newStub()), $js);
   }
-
-  ctools_include('node.pages', 'node', '');
-  ctools_include('modal');
-  ctools_include('ajax');
-
-  $op = (isset($node->title)) ? t('Edit') : t('New');
-  $form_state = array(
-    'title' => t('@op account', array('@op' => $op)),
-    'ajax' => TRUE,
-  );
-  $form_state['build_info']['args'] = array($node);
-  // change this to your type node form
-  $output = ctools_modal_form_wrapper('finance_account_node_form', $form_state);
-
-  if (!empty($form_state['executed'])) {
-    $output = array();
-    $output[] = ctools_modal_command_dismiss();
-    $output[] = ctools_ajax_command_reload();
+  else {
+    $modalHandler = new AccountEdit('finance_account_node_form', array($node),
+      $js);
   }
+  $modalHandler->output();
+}
 
-  print ajax_render($output);
-  exit;
+/**
+ * @param bool $js
+ * @param null $line_item
+ */
+function financials_ctools_transaction_modal_form($js = false, $line_item = null) {
+  if ($line_item == null) {
+    $line_item = \Drupal\financials\Entity\TransactionLineItem::newStub();
+    $modalHandler = new TransactionAdd('financials_add_transaction_form', array($line_item), $js);
+  }
+  else {
+    $modalHandler = new TransactionEdit('financials_add_transaction_form', array($line_item), $js);
+  }
+  $modalHandler->output();
+}
+
+/**
+ * @param bool $js
+ * @param null $line_item
+ */
+function financials_ctools_transfer_modal_form($js = false, $line_item = null) {
+  if ($line_item == null) {
+    $line_item = \Drupal\financials\Entity\TransactionLineItem::newStub();
+    $modalHandler = new TransferAdd('financials_transfer_transaction_form', array($line_item), $js);
+  }
+  else {
+    $modalHandler = new TransferEdit('financials_transfer_transaction_form', array($line_item), $js);
+  }
+  $modalHandler->output();
+}
+
+/**
+ * @param bool $js
+ * @param null $line_item
+ */
+function financials_ctools_budget_modal_form($js = false, $line_item = null) {
+  if ($line_item == null) {
+    $line_item = \Drupal\financials\Entity\BudgetLineItem::newStub();
+    $modalHandler = new TransferAdd('financials_add_budget_form', array($line_item), $js);
+  }
+  else {
+    $modalHandler = new TransferEdit('financials_add_budget_form', array($line_item), $js);
+  }
+  $modalHandler->output();
 }
