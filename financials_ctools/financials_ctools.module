@@ -62,6 +62,12 @@ function financials_ctools_menu() {
     'page arguments' => array(2, null),
     'access arguments' => array('financials add line item'),
   );
+  $items['budget/%ctools_js/edit/%commerce_line_item'] = array(
+    'title' => 'Edit budget item',
+    'page callback' => 'financials_ctools_budget_modal_form',
+    'page arguments' => array(1, 3),
+    'access arguments' => array('financials add line item'),
+  );
   return $items;
 }
 
@@ -135,6 +141,21 @@ function financials_ctools_financials_account_transactions_rows_alter(&$rows, $a
   foreach ($rows as $key => $table_row) {
     $rows[$key][3]['data']['#path'] = 'transactions/nojs/edit/' . $rows[$key][3]['data']['#transaction_id'];
     $rows[$key][3]['data']['#options']['attributes']['class'][] = 'ctools-use-modal';
+  }
+}
+
+/**
+ * Implements hook_financials_budget_item_rows_alter().
+ */
+function financials_ctools_financials_budget_item_rows_alter(&$rows) {
+  ctools_include('modal');
+  ctools_modal_add_js();
+  foreach ($rows as $key => $table_row) {
+    if (!isset($rows[$key]['data'][4])) {
+      continue;
+    }
+    $rows[$key]['data'][4]['data']['#path'] = 'budget/nojs/edit/' . $rows[$key]['data'][4]['data']['#budget_item_id'];
+    $rows[$key]['data'][4]['data']['#options']['attributes']['class'][] = 'ctools-use-modal';
   }
 }
 

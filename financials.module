@@ -88,6 +88,17 @@ function financials_menu() {
     'menu_name' => 'navigation',
     'file' => 'financials.pages.inc',
   );
+  $menu['budget/edit/%commerce_line_item'] = array(
+    'title' => 'Edit budget item',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'financials_add_budget_form',
+      2,
+    ),
+    'access arguments' => array('financials add line item'),
+    'menu_name' => 'navigation',
+    'file' => 'financials.pages.inc',
+  );
   $menu['add/transfer'] = array(
     'title' => 'Add a transfer',
     'page callback' => 'drupal_get_form',

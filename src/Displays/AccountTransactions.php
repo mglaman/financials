@@ -44,18 +44,7 @@ class AccountTransactions {
           $transaction->label(),
           format_date($transaction->getCreated()),
           FinancialsUtils::currencyFormat(FinancialsUtils::priceFieldAmount($transaction->getTotal())),
-          array(
-            'data' => array(
-              '#theme' => 'link',
-              '#text' => 'edit',
-              '#path' => 'transactions/edit/' . $entityID,
-              '#options' => array(
-                'attributes' => array(),
-                'html' => false,
-              ),
-              '#transaction_id' => $entityID,
-            ),
-          ),
+          $this->editLink($entityID),
         );
       }
     }
@@ -71,5 +60,20 @@ class AccountTransactions {
       ->propertyOrderBy('created', 'DESC');
     $results = $query->execute();
     return reset($results);
+  }
+
+  protected function editLink($entityID) {
+    return array(
+      'data' => array(
+        '#theme' => 'link',
+        '#text' => 'edit',
+        '#path' => 'transactions/edit/' . $entityID,
+        '#options' => array(
+          'attributes' => array(),
+          'html' => false,
+        ),
+        '#transaction_id' => $entityID,
+      ),
+    );
   }
 }

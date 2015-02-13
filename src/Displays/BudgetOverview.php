@@ -49,6 +49,7 @@ class BudgetOverview {
       t('Category'),
       t('Amount'),
       t('Description'),
+      t('Options'),
     );
   }
 
@@ -73,6 +74,7 @@ class BudgetOverview {
           $budgetItem->getCategory()->label(),
           FinancialsUtils::currencyFormat($budgetAmount),
           $budgetItem->label(),
+          $this->editLink($entityID)
         ),
         'class' => array(
           'financials-overview-budget-row',
@@ -83,17 +85,32 @@ class BudgetOverview {
     $this->netDiff = ($this->netIncome + $this->netExpense);
     $rows = $this->appendStats($rows);
 
+    drupal_alter('financials_budget_item_rows', $rows);
     return $rows;
+  }
+
+  protected function editLink($entityID) {
+    return array(
+      'data' => array(
+        '#theme' => 'link',
+        '#text' => 'edit',
+        '#path' => 'budget/edit/' . $entityID,
+        '#options' => array(
+          'attributes' => array(),
+          'html' => false,
+        ),
+        '#budget_item_id' => $entityID,
+      ),
+    );
   }
 
   protected function appendStats($rows) {
     if (count($rows)) {
       $rows[] = array(
         'data' => array(
-          '',
-          '',
+          array('colspan' => 2, 'data' => ''),
           t('Net: @balance', array('@balance' => FinancialsUtils::currencyFormat($this->netDiff))),
-          '',
+          array('colspan' => 2, 'data' => ''),
         ),
         'class' => array(
           'info'
