@@ -17,7 +17,7 @@ class AccountTransactions {
       '#theme' => 'table',
       '#header' => $this->tableHeaders(),
       '#rows' => $this->tableRows(),
-      '#empty' => t('No accounts added yet.'),
+      '#empty' => t('No transactions added yet.'),
       '#sticky' => true,
       '#attributes' => array(
         'class' => array('financials-accounts-overview')
@@ -30,6 +30,7 @@ class AccountTransactions {
       t('Label'),
       t('Time'),
       t('Amount'),
+      t('Operations')
     );
   }
 
@@ -43,9 +44,22 @@ class AccountTransactions {
           $transaction->label(),
           format_date($transaction->getCreated()),
           FinancialsUtils::currencyFormat(FinancialsUtils::priceFieldAmount($transaction->getTotal())),
+          array(
+            'data' => array(
+              '#theme' => 'link',
+              '#text' => 'edit',
+              '#path' => 'transactions/edit/' . $entityID,
+              '#options' => array(
+                'attributes' => array(),
+                'html' => false,
+              ),
+              '#transaction_id' => $entityID,
+            ),
+          ),
         );
       }
     }
+    drupal_alter('financials_account_transactions_rows', $rows, $this->accountID);
     return $rows;
   }
 

@@ -7,12 +7,14 @@ use Drupal\financials\FinancialsUtils;
 
 class TransactionForm {
   protected $lineItemType;
+  protected $isNew;
 
   public function __construct() {
     $this->lineItemType = TransactionLineItem::loadBundle();
   }
 
   public function getForm($form, &$form_state, $lineItem) {
+    $this->isNew = ($lineItem->line_item_id === null);
     // Add the field related form elements.
     $form_state['commerce_line_item'] = $lineItem;
     field_attach_form('commerce_line_item', $lineItem, $form, $form_state);
@@ -32,7 +34,7 @@ class TransactionForm {
     // Add a default save button.
     $form['actions']['submit'] = array(
       '#type' => 'submit',
-      '#value' => !empty($this->lineItemType['add_form_submit_value']) ? $this->lineItemType['add_form_submit_value'] : t('Save'),
+      '#value' => $this->isNew ? t('Add transaction') : t('Update transaction'),
       '#submit' => array(
         array('\Drupal\\financials\\Forms\\TransactionForm', 'submit')
       ),

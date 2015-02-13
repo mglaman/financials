@@ -66,6 +66,17 @@ function financials_menu() {
     'menu_name' => 'navigation',
     'file' => 'financials.pages.inc',
   );
+  $menu['transactions/edit/%commerce_line_item'] = array(
+    'title' => 'Add transaction',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'financials_add_transaction_form',
+      2,
+    ),
+    'access arguments' => array('financials add line item'),
+    'menu_name' => 'navigation',
+    'file' => 'financials.pages.inc',
+  );
   $menu['add/budget-item'] = array(
     'title' => 'Add budget item',
     'page callback' => 'drupal_get_form',

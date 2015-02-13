@@ -44,6 +44,12 @@ function financials_ctools_menu() {
     'page arguments' => array(2, null),
     'access arguments' => array('financials add line item'),
   );
+  $items['transactions/%ctools_js/edit/%commerce_line_item'] = array(
+    'title' => 'Add transaction',
+    'page callback' => 'financials_ctools_transaction_modal_form',
+    'page arguments' => array(1, 3),
+    'access arguments' => array('financials add line item'),
+  );
   $items['transfers/%ctools_js/add'] = array(
     'title' => 'Add transfer',
     'page callback' => 'financials_ctools_transfer_modal_form',
@@ -117,6 +123,18 @@ function financials_ctools_menu_local_tasks_alter(&$data, $router_item, $root_pa
         '#link' => $item,
       );
     }
+  }
+}
+
+/**
+ * Implements hook_financials_account_transactions_rows_alter().
+ */
+function financials_ctools_financials_account_transactions_rows_alter(&$rows, $accountID) {
+  ctools_include('modal');
+  ctools_modal_add_js();
+  foreach ($rows as $key => $table_row) {
+    $rows[$key][3]['data']['#path'] = 'transactions/nojs/edit/' . $rows[$key][3]['data']['#transaction_id'];
+    $rows[$key][3]['data']['#options']['attributes']['class'][] = 'ctools-use-modal';
   }
 }
 

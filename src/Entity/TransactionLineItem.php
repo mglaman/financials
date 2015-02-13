@@ -9,13 +9,28 @@ class TransactionLineItem extends FinancialsEntityBase implements FinancialsEnti
   protected $entityType = TRANSACTION_ENTITY;
 
   public function save() {
-    // On save, we need to check if it is a new transaction and update account
+    // On save, we need to update account
+    $account = new AccountNode($this->getAccount()->getIdentifier());
+    $transactionAmount = FinancialsUtils::priceFieldAmount($this->getTotal());
+
+    // If it's just a new transaction we can update account balance.
     if (isset($this->entity->is_new)) {
-
-      $transactionAmount = FinancialsUtils::priceFieldAmount($this->getTotal());
-      $account = new AccountNode($this->getAccount()->getIdentifier());
       $account->adjustCurrentBalance($transactionAmount);
-
+    }
+    // When editing a transaction, we need to see if the previous amount must
+    // be rolled back and the new balance adjusted.
+    else {
+      // @note: We can't load an instance of ourself here, or else it's recurse
+      //        into purgatory.
+      $original = entity_load_unchanged(TRANSACTION_ENTITY, $this->wrapper->getIdentifier());
+      $originalWrapper = new \EntityDrupalWrapper(TRANSACTION_ENTITY, $original);
+      $originalAmount = FinancialsUtils::priceFieldAmount($originalWrapper->get('commerce_unit_price'));
+      if ($originalAmount != $transactionAmount) {
+        // Reverse previous
+        $account->adjustCurrentBalance(($originalAmount * -1));
+        // Save new.
+        $account->adjustCurrentBalance($transactionAmount);
+      }
     }
     parent::save();
   }
